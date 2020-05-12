@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Covideo</title>
-    <link rel="stylesheet" href="main.css" />
+    <title>Covideo | Preview</title>
+    <link rel="stylesheet" href="./css/main.css" />
     <link rel="shortcut icon" href="#" />
   </head>
   <body>
     <main>
       <div id="video-wrapper">
-        <video id="video" autoplay muted></video>
+        <video id="local-video-preview" autoplay muted></video>
       </div>
       <div id="volume-test-wrapper">
         <button onclick="volume_test()" id="volume_test_button">Microphone Test</button>
@@ -17,9 +17,11 @@
         <div id="volume_bad" style="display:none">No microphone found yet, please say 'test' and check your device or <a class='btn' href='javascript:window.location.reload()'>refresh this page</a> to retry.</div>
         <canvas id="meter" width="300" height="30"></canvas>
       </div>
+      <div id="start-call-wrapper"><a href="./video-call.html">Start Call</a></div>
     </main>
     <!-- Scripts -->
-    <script src="./main.js"></script>
-    <script src="./volume-meter.js"></script>
+    <script type="module" src="./js/main.js"></script>
+    <script type="module" src="./js/index.js"></script>
+    <script src="./js/volume-meter.js"></script>
   </body>
 </html>

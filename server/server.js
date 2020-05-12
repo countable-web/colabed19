@@ -1,7 +1,7 @@
 const http = require("http");
-// const url = require("url");
 const fs = require("fs");
 const path = require("path");
+const mime = require("./mime-lookup.js");
 
 const hostname = "127.0.0.1";
 const port = 1337;
@@ -13,6 +13,7 @@ const readFile = (req, res, filename = req.url) => {
       res.end(JSON.stringify(err));
       return;
     }
+    res.setHeader("Content-Type", mime.lookup(path.extname(filename)));
     res.writeHead(200);
     res.end(data);
   });
