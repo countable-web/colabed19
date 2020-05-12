@@ -8,5 +8,8 @@
     "start": "node server/server.js"
   },
   "author": "Gianlucci B. Minarelli",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^2.3.0"
+  }
 }

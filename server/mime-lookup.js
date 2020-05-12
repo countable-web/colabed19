@@ -1,3 +1,4 @@
+// NOTE: This is where I started to regret not using Express.
 const path = require("path");
 
 const mime = {

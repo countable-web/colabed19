@@ -2,12 +2,13 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const mime = require("./mime-lookup.js");
+const socketIO = require("socket.io");
 
 const hostname = "127.0.0.1";
 const port = 1337;
 
 const readFile = (req, res, filename = req.url) => {
-  fs.readFile(path.join(__dirname, "..", filename), (err,data) => {
+  fs.readFile(path.join(__dirname, "..", filename), (err, data) => {
     if (err) {
       res.writeHead(404);
       res.end(JSON.stringify(err));
@@ -26,6 +27,15 @@ const server = http.createServer((req, res) => {
   } else {
     readFile(req, res);
   }
+});
+
+const io = socketIO(server);
+
+io.on("connection", (socket) => {
+  console.log("Socket connected.");
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected.");
+  });
 });
 
 server.listen(port, hostname, () => {

@@ -1,6 +1,6 @@
-import { initWsManager } from "./ws-manager.js";
+// TODO: I probably shouldn't leave all the WebRTC logic here. Moving it to video-call.js makes more sense.
 
-// Based on https://github.com/webrtc/FirebaseRTC/.
+import { initWsManager } from "./ws-manager.js";
 
 let peerConnection = null;
 let localStream = null;
@@ -9,6 +9,7 @@ let roomDialog = null;
 let roomId = null;
 let gotSDPSignal = false;
 let ws_manager = null;
+let busyFlag = false;
 
 // Setup:
 
@@ -51,8 +52,8 @@ const registerPeerConnectionListeners = () => {
 };
 
 const startPing = (interval) => {
+  ws_manager = initWsManager();
   setInterval(function () {
-    ws_manager = initWsManager();
     if (ws_manager.isOpen()) {
       console.log("Ping!", "\nbusyFlag: ", busyFlag);
       ws_manager.trigger("sendmessage", {
@@ -70,9 +71,9 @@ const getUserMediaSuccess = (stream, id) => {
   localStream = stream;
   const video = document.getElementById(id);
   video.srcObject = stream;
+  //TODO: I don't like this, I should find a better way to differentiate the function's use cases.
   if (id === "local-video") {
-    // NOTE: Not finished.
-    // startPing(1000);
+    startPing(1000);
   }
 };
 

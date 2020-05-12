@@ -1,4 +1,4 @@
-// Taken from http://stackoverflow.com/a/105074/515584.
+// UUID creation logic taken from http://stackoverflow.com/a/105074/515584.
 
 const createUUID = () => {
   const s4 = () => {
@@ -10,11 +10,9 @@ const createUUID = () => {
 };
 
 const wsManager = function () {
-  riot.observable(this);
+  riot.observable(this); // Riot.js global (CDN import in video-call.html).
   this.uuid = createUUID();
-  // TODO: Implement WebSocket server and pass URL to constructor:
-  // const videoCallSocket = new WebSocket(`ws://${window.location.hostname}/ENDPOINT`);
-  this.serverConnection = videoCallSocket;
+  this.serverConnection = io(); // Socket.io global (CDN import in video-call.html).
   this.isOpen = function () {
     return this.serverConnection.readyState === this.serverConnection.OPEN;
   };
@@ -32,10 +30,10 @@ export const initWsManager = () => {
       },
     });
   };
-  
+
   ws_manager.serverConnection.onmessage = function (messageData) {
     var message = JSON.parse(messageData.data);
-  
+
     if (
       message.type &&
       (message.type === "signal" ||
@@ -45,7 +43,7 @@ export const initWsManager = () => {
       ws_manager.trigger(message.type, message.messageData);
     }
   };
-  
+
   ws_manager.on("sendmessage", function (messageData) {
     messageData.uuid = this.uuid;
     this.serverConnection.send(JSON.stringify(messageData));
