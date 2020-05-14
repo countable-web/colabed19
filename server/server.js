@@ -36,6 +36,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Socket disconnected.");
   });
+  // "ping" and "pong" are reserved event names: https://github.com/socketio/socket.io/issues/2414#issuecomment-176727699.
+  socket.on("bing", (message) => {
+    // console.log(message);
+    socket.broadcast.emit("bong", message);
+  });
 });
 
 server.listen(port, hostname, () => {

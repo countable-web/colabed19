@@ -1,6 +1,6 @@
 // TODO: I probably shouldn't leave all the WebRTC logic here. Moving it to video-call.js makes more sense.
 
-import { initWsManager } from "./ws-manager.js";
+import { initSocket } from "./ws-manager.js";
 
 let peerConnection = null;
 let localStream = null;
@@ -8,7 +8,7 @@ let remoteStream = null;
 let roomDialog = null;
 let roomId = null;
 let gotSDPSignal = false;
-let ws_manager = null;
+let socketWrapper = null;
 let busyFlag = false;
 
 // Setup:
@@ -52,17 +52,16 @@ const registerPeerConnectionListeners = () => {
 };
 
 const startPing = (interval) => {
-  ws_manager = initWsManager();
   setInterval(function () {
-    if (ws_manager.isOpen()) {
-      console.log("Ping!", "\nbusyFlag: ", busyFlag);
-      ws_manager.trigger("sendmessage", {
-        type: "ping",
-        messageData: {
-          uuid: ws_manager.uuid,
+    if (socketWrapper.isOpen()) {
+      // "ping" and "pong" are reserved event names: https://github.com/socketio/socket.io/issues/2414#issuecomment-176727699.
+      socketWrapper.socket.emit(
+        "bing",
+        JSON.stringify({
+          uuid: socketWrapper.uuid,
           busy: busyFlag,
-        },
-      });
+        })
+      );
     }
   }, interval);
 };
@@ -71,8 +70,9 @@ const getUserMediaSuccess = (stream, id) => {
   localStream = stream;
   const video = document.getElementById(id);
   video.srcObject = stream;
-  //TODO: I don't like this, I should find a better way to differentiate the function's use cases.
+  //TODO: I don't like this, should find a better way to differentiate the function's use cases.
   if (id === "local-video") {
+    socketWrapper = initSocket();
     startPing(1000);
   }
 };
