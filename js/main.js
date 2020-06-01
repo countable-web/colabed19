@@ -54,10 +54,9 @@ const registerPeerConnectionListeners = () => {
 const startPing = (interval) => {
   setInterval(function () {
     if (socketWrapper.isOpen()) {
-      // "ping" and "pong" are reserved event names: https://github.com/socketio/socket.io/issues/2414#issuecomment-176727699.
-      socketWrapper.socket.emit(
-        "bing",
+      socketWrapper.socket.send(
         JSON.stringify({
+          type: "ping",
           uuid: socketWrapper.uuid,
           busy: busyFlag,
         })

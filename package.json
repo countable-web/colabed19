@@ -2,6 +2,10 @@
   "name": "covideo",
   "version": "1.0.0",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/countable-web/colabed19.git"
+  },
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -10,6 +14,10 @@
   "author": "Gianlucci B. Minarelli",
   "license": "ISC",
   "dependencies": {
-    "socket.io": "^2.3.0"
+    "ws": "^7.3.0"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2"
   }
 }

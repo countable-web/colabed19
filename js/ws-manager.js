@@ -10,16 +10,18 @@ const createUUID = () => {
 };
 
 export const initSocket = () => {
-  const socket = io(); // Socket.io global (CDN import in video-call.html).
+  const socket = new WebSocket(`ws://${window.location.hostname}:1337`);
   let socketWrapper = {
     socket,
   };
 
   socketWrapper.uuid = createUUID();
-  // "ping" and "pong" are reserved event names: https://github.com/socketio/socket.io/issues/2414#issuecomment-176727699.
-  socketWrapper.socket.on("bong", (message) => {
-    console.log(JSON.parse(message));
-  });
+  socketWrapper.socket.onmessage = (messageJSON) => {
+    const message = JSON.parse(messageJSON.data);
+    if (message.type && (message.type === 'pong')) {
+      console.log(message);
+    }
+  };
   socketWrapper.isOpen = () => {
     return socketWrapper.socket.readyState === socketWrapper.socket.OPEN;
   };
