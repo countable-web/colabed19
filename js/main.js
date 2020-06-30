@@ -10,6 +10,7 @@ let roomId = null;
 let gotSDPSignal = false;
 let socketWrapper = null;
 let busyFlag = false;
+let isAuthenticated = false;
 
 // Setup:
 
@@ -26,8 +27,6 @@ const constraints = (window.constraints = {
   audio: true,
   video: true,
 });
-
-// Utility functions:
 
 const registerPeerConnectionListeners = () => {
   peerConnection.addEventListener("icegatheringstatechange", () => {
@@ -51,6 +50,40 @@ const registerPeerConnectionListeners = () => {
   });
 };
 
+const createRoom = async () => {
+  console.log(
+    "Create PeerConnection with configuration: ",
+    peerConnectionConfig
+  );
+  peerConnection = new RTCPeerConnection(peerConnectionConfig);
+  registerPeerConnectionListeners();
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
+  localStream.getTracks().forEach((track) => {
+    peerConnection.addTrack(track, localStream);
+  });
+  // TODO: send signal with local description.
+  // Check createdDescription function and ws_manager.on('signal') handler in the video-box.tag file (KMC project).
+};
+
+const sendOffer = () => {
+  if (!peerConnection) {
+    createRoom();
+  }
+}
+
+const onSocketMessage = (messageJSON) => {
+  const message = JSON.parse(messageJSON.data);
+  if (message.type && message.type === "pong") {
+    if (message.uuid !== socketWrapper.uuid) {
+      console.log(message);
+      if (localStream && !gotSDPSignal && !message.busy && !isAuthenticated) {
+        sendOffer();
+      }
+    }
+  }
+};
+
 const startPing = (interval) => {
   setInterval(function () {
     if (socketWrapper.isOpen()) {
@@ -71,8 +104,11 @@ const getUserMediaSuccess = (stream, id) => {
   video.srcObject = stream;
   //TODO: I don't like this, should find a better way to differentiate the function's use cases.
   if (id === "local-video") {
-    socketWrapper = initSocket();
-    startPing(1000);
+    socketWrapper = initSocket(onSocketMessage);
+    console.log(`isAuthenticated: ${isAuthenticated}`);
+    if (isAuthenticated) {
+      startPing(1000);
+    }
   }
 };
 
@@ -92,16 +128,6 @@ export const initLocalVideo = async (id) => {
   }
 };
 
-export const createRoom = async () => {
-  console.log(
-    "Create PeerConnection with configuration: ",
-    peerConnectionConfig
-  );
-  peerConnection = new RTCPeerConnection(peerConnectionConfig);
-  registerPeerConnectionListeners();
-  const offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-  localStream.getTracks().forEach((track) => {
-    peerConnection.addTrack(track, localStream);
-  });
+export const authenticateUser = (authenticationResult) => {
+  isAuthenticated = authenticationResult;
 };
