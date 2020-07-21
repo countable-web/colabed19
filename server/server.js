@@ -33,20 +33,20 @@ const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (socket) => {
   console.log("Socket connected.");
-  socket.on("disconnect", () => {
+  socket.on("close", () => {
     console.log("Socket disconnected.");
   });
   socket.on("message", (messageJSON) => {
     let message = JSON.parse(messageJSON);
     // console.log(message);
-    if (message.type && (message.type === 'ping')) {
+    if (message.type && message.type === "ping") {
       message.type = "pong";
-      wss.clients.forEach((client) => {
-        if (client !== socket && client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(message));
-        }
-      });
     }
+    wss.clients.forEach((client) => {
+      if (client !== socket && client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify(message));
+      }
+    });
   });
 });
 

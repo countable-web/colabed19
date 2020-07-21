@@ -2,9 +2,9 @@
 
 import { initSocket } from "./ws-manager.js";
 
+const localVideo = document.getElementById("local-video");
+const remoteVideo = document.getElementById("remote-video");
 let peerConnection = null;
-let localStream = null;
-let remoteStream = null;
 let roomDialog = null;
 let roomId = null;
 let gotSDPSignal = false;
@@ -12,7 +12,7 @@ let socketWrapper = null;
 let busyFlag = false;
 let isAuthenticated = false;
 
-// Setup:
+// SETUP FUNCTIONS
 
 const peerConnectionConfig = {
   iceServers: [
@@ -28,10 +28,17 @@ const constraints = (window.constraints = {
   video: true,
 });
 
+// EVENT LISTENERS AND HANDLERS
+
+const errorHandler = (error) => {
+  // TODO: improve error handling.
+  console.error(error);
+};
+
 const registerPeerConnectionListeners = () => {
   peerConnection.addEventListener("icegatheringstatechange", () => {
     console.log(
-      `ICE gathering state changed: ${peerConnection.iceGatheringState}`
+      `ICE gathering state change: ${peerConnection.iceGatheringState}`
     );
   });
 
@@ -47,45 +54,124 @@ const registerPeerConnectionListeners = () => {
     console.log(
       `ICE connection state change: ${peerConnection.iceConnectionState}`
     );
+    if (peerConnection.iceConnectionState == "disconnected") {
+      peerConnection.close();
+      peerConnection = null;
+      gotSDPSignal = false;
+      busyFlag = false;
+      remoteVideo.srcObject = null;
+    }
   });
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      socketWrapper.socket.send(
+        JSON.stringify({
+          type: "new-ice-candidate",
+          uuid: socketWrapper.uuid,
+          candidate: event.candidate,
+        })
+      );
+    }
+  };
+
+  peerConnection.ontrack = (event) => {
+    if (event.streams) {
+      let stream = event.streams[0];
+      if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== stream.id) {
+        remoteVideo.srcObject = stream;
+      }
+    }
+  };
 };
 
-const createRoom = async () => {
+const onSocketMessage = async (messageJSON) => {
+  const message = JSON.parse(messageJSON.data);
+  if (message.type) {
+    if (message.type === "pong") {
+      if (message.uuid !== socketWrapper.uuid) {
+        console.log(message);
+        if (
+          localVideo.srcObject &&
+          !gotSDPSignal &&
+          !message.busy &&
+          !isAuthenticated
+        ) {
+          sendOffer();
+        }
+      }
+    } else {
+      if (!peerConnection) {
+        createPeerConnection();
+        busyFlag = true;
+      } 
+      if (message.type === "new-ice-candidate") {
+        console.log("Signal: new-ice-candidate");
+        peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
+      } else if (message.type === "sdp-signal") {
+        console.log("Signal: sdp-signal");
+        if (!gotSDPSignal) {
+          gotSDPSignal = true;
+          try {
+            await peerConnection.setRemoteDescription(
+              new RTCSessionDescription(message.sdp)
+            );
+            if (message.sdp.type == "offer") {
+              const answer = await peerConnection.createAnswer();
+              try {
+                createDescription(answer);
+              } catch (error) {
+                errorHandler(error);
+              }
+            }
+          } catch (error) {
+            errorHandler(error);
+          }
+        }
+      }
+    }
+  }
+};
+
+// CONNECTION FUNCTIONS
+
+const createDescription = async (description) => {
+  await peerConnection.setLocalDescription(description);
+  socketWrapper.socket.send(
+    JSON.stringify({
+      type: "sdp-signal",
+      uuid: socketWrapper.uuid,
+      sdp: peerConnection.localDescription,
+    })
+  );
+};
+
+const createPeerConnection = async () => {
   console.log(
     "Create PeerConnection with configuration: ",
     peerConnectionConfig
   );
   peerConnection = new RTCPeerConnection(peerConnectionConfig);
   registerPeerConnectionListeners();
-  const offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-  localStream.getTracks().forEach((track) => {
-    peerConnection.addTrack(track, localStream);
+  localVideo.srcObject.getTracks().forEach((track) => {
+    peerConnection.addTrack(track, localVideo.srcObject);
   });
-  // TODO: send signal with local description.
-  // Check createdDescription function and ws_manager.on('signal') handler in the video-box.tag file (KMC project).
 };
 
-const sendOffer = () => {
+const sendOffer = async () => {
   if (!peerConnection) {
-    createRoom();
-  }
-}
-
-const onSocketMessage = (messageJSON) => {
-  const message = JSON.parse(messageJSON.data);
-  if (message.type && message.type === "pong") {
-    if (message.uuid !== socketWrapper.uuid) {
-      console.log(message);
-      if (localStream && !gotSDPSignal && !message.busy && !isAuthenticated) {
-        sendOffer();
-      }
+    createPeerConnection();
+    try {
+      const offer = await peerConnection.createOffer();
+      createDescription(offer);
+    } catch (error) {
+      errorHandler(error);
     }
   }
 };
 
 const startPing = (interval) => {
-  setInterval(function () {
+  setInterval(() => {
     if (socketWrapper.isOpen()) {
       socketWrapper.socket.send(
         JSON.stringify({
@@ -98,12 +184,9 @@ const startPing = (interval) => {
   }, interval);
 };
 
-const getUserMediaSuccess = (stream, id) => {
-  localStream = stream;
-  const video = document.getElementById(id);
-  video.srcObject = stream;
-  //TODO: I don't like this, should find a better way to differentiate the function's use cases.
-  if (id === "local-video") {
+const getUserMediaSuccess = (stream, startPeerConnection) => {
+  localVideo.srcObject = stream;
+  if (startPeerConnection) {
     socketWrapper = initSocket(onSocketMessage);
     console.log(`isAuthenticated: ${isAuthenticated}`);
     if (isAuthenticated) {
@@ -112,19 +195,14 @@ const getUserMediaSuccess = (stream, id) => {
   }
 };
 
-const getUserMediaError = (error) => {
-  // TODO: improve error handling.
-  console.error(error);
-};
+// EXPORTED FUNCTIONS
 
-// Exported functions:
-
-export const initLocalVideo = async (id) => {
+export const initLocalVideo = async (startPeerConnection) => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    getUserMediaSuccess(stream, id);
+    getUserMediaSuccess(stream, startPeerConnection);
   } catch (error) {
-    getUserMediaError(error);
+    errorHandler(error);
   }
 };
 
