@@ -1,0 +1,26 @@
+.video-wrapper {
+  margin-top: 2rem;
+}
+
+.video-wrapper > video, #volume_test_button {
+  display: block;
+  margin: 0 auto;
+}
+
+#volume-test-wrapper, #start-call-wrapper {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+#start-call-wrapper > button {
+  padding: 0;
+}
+
+#start-call-wrapper a {
+  display: block;
+  padding: 0.5rem;
+}
+
+canvas {
+  margin-top: 1rem;
+}

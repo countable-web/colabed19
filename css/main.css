@@ -1,1 +1,19 @@
-/* TODO */
+body, main {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+button {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+a {
+  text-decoration: none;
+  color: #000000;
+}

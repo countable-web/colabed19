@@ -38,7 +38,6 @@ wss.on("connection", (socket) => {
   });
   socket.on("message", (messageJSON) => {
     let message = JSON.parse(messageJSON);
-    // console.log(message);
     if (message.type && message.type === "ping") {
       message.type = "pong";
     }

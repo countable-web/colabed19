@@ -1,4 +1,5 @@
 // TODO: I probably shouldn't leave all the WebRTC logic here. Moving it to video-call.js makes more sense.
+// TODO: Remove direct DOM manipulations (eventually I'll have to choose a library or framework to upgrade the interface).
 
 import { initSocket } from "./ws-manager.js";
 
@@ -13,7 +14,7 @@ let isAuthenticated = false;
 
 // SETUP FUNCTIONS
 
-// TODO: update connection config (TURN server).
+// TODO: update connection configuration (add a TURN server).
 const peerConnectionConfig = {
   iceServers: [
     {
@@ -66,6 +67,7 @@ const registerPeerConnectionListeners = () => {
       gotSDPSignal = false;
       busyFlag = false;
       remoteVideo.srcObject = null;
+      remoteVideo.parentElement.classList.add("hidden");
     }
   };
 
@@ -86,11 +88,13 @@ const registerPeerConnectionListeners = () => {
       let stream = event.streams[0];
       if (!remoteVideo.srcObject || remoteVideo.srcObject.id !== stream.id) {
         remoteVideo.srcObject = stream;
+        remoteVideo.parentElement.classList.remove("hidden");
       }
     }
   };
 };
 
+// TODO: modularize some of the operations below, it's kinda hard to read.
 const onSocketMessage = async (messageJSON) => {
   const message = JSON.parse(messageJSON.data);
   if (message.type) {
@@ -178,6 +182,9 @@ const sendOffer = async () => {
   }
 };
 
+// NOTE: I can't really stop the pinging because this is how we alert other users trying to join the call (patients and doctors).
+// i.e. even if we already established a connection we should still ping the server (as doctors) in case other users are trying to
+// join the (busy) call, in which case we alert them (see alertMessage below).
 const startPing = (interval) => {
   setInterval(() => {
     if (socketWrapper.isOpen()) {
@@ -198,6 +205,7 @@ const getUserMediaSuccess = (stream, startPeerConnection) => {
     socketWrapper = initSocket(onSocketMessage);
     console.log(`isAuthenticated: ${isAuthenticated}`);
     if (isAuthenticated) {
+      // NOTE: the 1 second interval below is arbitrary, this is possible something worth thinking about.
       startPing(1000);
     }
   }
@@ -229,6 +237,7 @@ export const initLocalVideo = async (startPeerConnection) => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     getUserMediaSuccess(stream, startPeerConnection);
+    localVideo.parentElement.classList.remove("hidden");
   } catch (error) {
     errorHandler(error);
   }
