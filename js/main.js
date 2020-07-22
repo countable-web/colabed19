@@ -4,16 +4,16 @@ import { initSocket } from "./ws-manager.js";
 
 const localVideo = document.getElementById("local-video");
 const remoteVideo = document.getElementById("remote-video");
+const notificationBlacklist = {};
 let peerConnection = null;
-let roomDialog = null;
-let roomId = null;
-let gotSDPSignal = false;
 let socketWrapper = null;
+let gotSDPSignal = false;
 let busyFlag = false;
 let isAuthenticated = false;
 
 // SETUP FUNCTIONS
 
+// TODO: update connection config (TURN server).
 const peerConnectionConfig = {
   iceServers: [
     {
@@ -36,21 +36,27 @@ const errorHandler = (error) => {
 };
 
 const registerPeerConnectionListeners = () => {
-  peerConnection.addEventListener("icegatheringstatechange", () => {
-    console.log(
-      `ICE gathering state change: ${peerConnection.iceGatheringState}`
-    );
-  });
+  peerConnection.onicegatheringstatechange = () => {
+    if (peerConnection && peerConnection.iceGatheringState) {
+      console.log(
+        `ICE gathering state change: ${peerConnection.iceGatheringState}`
+      );
+    }
+  };
 
-  peerConnection.addEventListener("connectionstatechange", () => {
-    console.log(`Connection state change: ${peerConnection.connectionState}`);
-  });
+  peerConnection.onconnectionstatechange = () => {
+    if (peerConnection && peerConnection.connectionState) {
+      console.log(`Connection state change: ${peerConnection.connectionState}`);
+    }
+  };
 
-  peerConnection.addEventListener("signalingstatechange", () => {
-    console.log(`Signaling state change: ${peerConnection.signalingState}`);
-  });
+  peerConnection.onsignalingstatechange = () => {
+    if (peerConnection && peerConnection.signalingState) {
+      console.log(`Signaling state change: ${peerConnection.signalingState}`);
+    }
+  };
 
-  peerConnection.addEventListener("iceconnectionstatechange ", () => {
+  peerConnection.oniceconnectionstatechange = () => {
     console.log(
       `ICE connection state change: ${peerConnection.iceConnectionState}`
     );
@@ -61,7 +67,7 @@ const registerPeerConnectionListeners = () => {
       busyFlag = false;
       remoteVideo.srcObject = null;
     }
-  });
+  };
 
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
@@ -98,18 +104,19 @@ const onSocketMessage = async (messageJSON) => {
           !isAuthenticated
         ) {
           sendOffer();
+        } else if (!busyFlag && !(message.uuid in notificationBlacklist)) {
+          notificationBlacklist[message.uuid] = true;
+          alertMessage(message.busy, isAuthenticated);
         }
       }
     } else {
       if (!peerConnection) {
-        createPeerConnection();
         busyFlag = true;
-      } 
+        createPeerConnection();
+      }
       if (message.type === "new-ice-candidate") {
-        console.log("Signal: new-ice-candidate");
         peerConnection.addIceCandidate(new RTCIceCandidate(message.candidate));
       } else if (message.type === "sdp-signal") {
-        console.log("Signal: sdp-signal");
         if (!gotSDPSignal) {
           gotSDPSignal = true;
           try {
@@ -160,6 +167,7 @@ const createPeerConnection = async () => {
 
 const sendOffer = async () => {
   if (!peerConnection) {
+    busyFlag = true;
     createPeerConnection();
     try {
       const offer = await peerConnection.createOffer();
@@ -191,6 +199,26 @@ const getUserMediaSuccess = (stream, startPeerConnection) => {
     console.log(`isAuthenticated: ${isAuthenticated}`);
     if (isAuthenticated) {
       startPing(1000);
+    }
+  }
+};
+
+const alertMessage = (senderIsBusy, receiverIsAuthenticated) => {
+  if (!senderIsBusy) {
+    if (receiverIsAuthenticated) {
+      window.alert(
+        "It seems like another doctor is currently in this call, please check your other devices and close any tabs referencing this room.\n\nTrying to access the same room from different devices using the same account might cause this error."
+      );
+    }
+  } else {
+    if (!receiverIsAuthenticated) {
+      window.alert(
+        "The video call you're trying to join is currently full, please wait."
+      );
+    } else {
+      window.alert(
+        "The video call you're trying to join already has a registered doctor, please check your other devices and close any tabs referencing this room.\n\nTrying to access the same room from different devices using the same account might cause this error."
+      );
     }
   }
 };
