@@ -1,1 +1,47 @@
-/* TODO */
+body,
+main {
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.button-wrapper {
+  text-align: center;
+}
+
+.button-default {
+  font-size: 14px;
+  display: inline-block;
+  cursor: pointer;
+  padding: 1rem;
+  border: 0.1rem solid #000000;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-weight: 300;
+  color: #000000;
+  text-align: center;
+  background-color: transparent;
+  transition: all 0.2s;
+}
+
+/* .button-default:hover {
+  color: #ffffff;
+  background-color: #000000;
+} */
+
+a {
+  text-decoration: none;
+  color: #000000;
+}
+
+button:focus {
+  outline: 0;
+}

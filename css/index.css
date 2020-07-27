@@ -1,0 +1,18 @@
+.video-wrapper {
+  margin-top: 2rem;
+}
+
+.video-wrapper > video {
+  display: block;
+  margin: 0 auto;
+}
+
+#volume-test-wrapper {
+  text-align: center;
+  margin: 1rem 0 0 0;
+  height: 100px;
+}
+
+canvas {
+  margin: 1rem 0;
+}

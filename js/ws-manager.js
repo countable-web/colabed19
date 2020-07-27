@@ -9,19 +9,14 @@ const createUUID = () => {
   return `${s4()}${s4()}-${s4()}-${s4()}-${s4()}-${s4()}${s4()}${s4()}`;
 };
 
-export const initSocket = () => {
+export const initSocket = (onMessageCallback) => {
   const socket = new WebSocket(`ws://${window.location.hostname}:1337`);
   let socketWrapper = {
     socket,
   };
 
   socketWrapper.uuid = createUUID();
-  socketWrapper.socket.onmessage = (messageJSON) => {
-    const message = JSON.parse(messageJSON.data);
-    if (message.type && (message.type === 'pong')) {
-      console.log(message);
-    }
-  };
+  socketWrapper.socket.onmessage = onMessageCallback;
   socketWrapper.isOpen = () => {
     return socketWrapper.socket.readyState === socketWrapper.socket.OPEN;
   };

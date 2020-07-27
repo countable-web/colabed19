@@ -4,16 +4,28 @@
     <meta charset="utf-8" />
     <title>Covideo | Call</title>
     <link rel="stylesheet" href="./css/main.css" />
+    <link rel="stylesheet" href="./css/video-call.css" />
     <link rel="shortcut icon" href="#" />
   </head>
   <body>
     <main>
-      <div id="video-wrapper">
-        <video id="local-video" autoplay muted></video>
+      <div id="authenticate-user-wrapper" class="button-wrapper">
+        <button id="authenticate-user" class="button-default">Authenticate</button>
+      </div>
+      <div id="local-video-wrapper" class="video-wrapper hidden">
+        <!-- When testing alone you can use the label below to help you identify the local and remote videos: -->
+        <!-- <p id="local-label">LOCAL</p> -->
+        <video id="local-video" autoplay></video>
+        <div id="video-button-container">
+          <button class="toggle-button button-default" id="toggle-video">Video</button>
+          <button class="toggle-button button-default" id="toggle-sound">Sound</button>
+        </div>
+        <div id="remote-video-wrapper" class="video-wrapper hidden video-preview">
+          <video id="remote-video" autoplay></video>
+        </div>
       </div>
     </main>
     <!-- Scripts -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script> -->
     <script type="module" src="./js/ws-manager.js"></script>
     <script type="module" src="./js/main.js"></script>
     <script type="module" src="./js/video-call.js"></script>
