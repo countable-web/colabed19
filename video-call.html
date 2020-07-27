@@ -9,16 +9,16 @@
   </head>
   <body>
     <main>
-      <div id="authenticate-user-wrapper">
-        <button id="authenticate-user">Authenticate</button>
+      <div id="authenticate-user-wrapper" class="button-wrapper">
+        <button id="authenticate-user" class="button-default">Authenticate</button>
       </div>
       <div id="local-video-wrapper" class="video-wrapper hidden">
         <!-- When testing alone you can use the label below to help you identify the local and remote videos: -->
-        <p id="local-label">LOCAL</p>
+        <!-- <p id="local-label">LOCAL</p> -->
         <video id="local-video" autoplay></video>
         <div id="video-button-container">
-          <button class="toggle-button" id="toggle-video">Video</button>
-          <button class="toggle-button" id="toggle-sound">Sound</button>
+          <button class="toggle-button button-default" id="toggle-video">Video</button>
+          <button class="toggle-button button-default" id="toggle-sound">Sound</button>
         </div>
         <div id="remote-video-wrapper" class="video-wrapper hidden video-preview">
           <video id="remote-video" autoplay></video>

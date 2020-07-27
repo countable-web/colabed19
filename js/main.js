@@ -10,6 +10,8 @@ let peerConnection = null;
 let socketWrapper = null;
 let gotSDPSignal = false;
 let busyFlag = false;
+// NOTE: when adding this project to another the authentication will probably be done somewhere else, in which case the
+// isAuthenticated value below would be initialized accordingly.
 let isAuthenticated = false;
 
 // SETUP FUNCTIONS
@@ -21,6 +23,7 @@ const peerConnectionConfig = {
       urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
     },
   ],
+  // NOTE: the pool size of 10 candidates is arbitrary.
   iceCandidatePoolSize: 10,
 };
 

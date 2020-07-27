@@ -13,12 +13,12 @@
         <video id="local-video" autoplay></video>
       </div>
       <div id="volume-test-wrapper">
-        <button onclick="volume_test()" id="volume_test_button">Microphone Test</button>
+        <div class="button-wrapper"><button onclick="volume_test()" id="volume_test_button" class="button-default">Microphone Test</button></div>
         <div id="volume_good" style="display:none">Microphone found! &check;</a></div>
         <div id="volume_bad" style="display:none">No microphone found yet, please say 'test' and check your device or <a class='btn' href='javascript:window.location.reload()'>refresh this page</a> to retry.</div>
         <canvas id="meter" width="300" height="30"></canvas>
       </div>
-      <div id="start-call-wrapper"><button><a href="./video-call.html">Start Call</a></button></div>
+      <div class="button-wrapper"><a href="./video-call.html" class="button-default">Start Call</a></div>
     </main>
     <!-- Scripts -->
     <script type="module" src="./js/main.js"></script>

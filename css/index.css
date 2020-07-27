@@ -2,25 +2,17 @@
   margin-top: 2rem;
 }
 
-.video-wrapper > video, #volume_test_button {
+.video-wrapper > video {
   display: block;
   margin: 0 auto;
 }
 
-#volume-test-wrapper, #start-call-wrapper {
+#volume-test-wrapper {
   text-align: center;
-  margin: 1rem 0;
-}
-
-#start-call-wrapper > button {
-  padding: 0;
-}
-
-#start-call-wrapper a {
-  display: block;
-  padding: 0.5rem;
+  margin: 1rem 0 0 0;
+  height: 100px;
 }
 
 canvas {
-  margin-top: 1rem;
+  margin: 1rem 0;
 }
